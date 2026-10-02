@@ -1,0 +1,1590 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>flow for Wendy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600&family=DM+Sans:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#f7f4ee; --panel:#efeae1; --card:#ffffff; --rule:#ded6c8;
+  --ink:#1f2a27; --mid:#5d6b66; --faint:#94a09a;
+  --teal:#2e6e6e; --teal-soft:#dcebe9; --teal-deep:#1d4a4a;
+  --warm:#b4823a; --warm-soft:#f6ecdb;
+  --alert:#b4534b; --alert-soft:#f8ebe9;
+  --bar:#141a18;
+  --hexW:196px; --hexH:172px;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#12100e; --panel:#1a1917; --card:#201f1c; --rule:#3a3733;
+    --ink:#f0ece4; --mid:#a9b2ad; --faint:#7d857f;
+    --teal:#7fc4bf; --teal-soft:#1b3835; --teal-deep:#a9dedb;
+    --warm:#d3a45e; --warm-soft:#332715;
+    --alert:#e08a80; --alert-soft:#3a2320;
+    --bar:#0b0a09;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--ground);color:var(--ink);
+  font:15px/1.5 'DM Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer;background:none;border:none;color:inherit}
+.mono{font-family:'IBM Plex Mono',monospace}
+
+/* ============ the chrome ============ */
+#top{position:fixed;top:0;left:0;right:0;height:58px;z-index:60;background:var(--bar);
+  display:flex;align-items:center;gap:18px;padding:0 20px;color:#f0ece4}
+#who{position:absolute;left:50%;transform:translateX(-50%);cursor:pointer;
+  border-radius:999px;padding:4px 14px 4px 5px;transition:background .15s}
+#who:hover,#who.open{background:#242b29}
+#who .nm{transition:color .15s}
+#who:hover .nm,#who.open .nm{color:#f0ece4}
+
+/* The menu hangs straight off the bottom of the name, left edges lined up,
+   so it never floats somewhere of its own choosing. */
+#whoMenu{display:none;position:fixed;z-index:75;width:248px;background:var(--bar);
+  border:1px solid var(--rule);border-radius:12px;padding:7px;
+  box-shadow:0 18px 50px rgba(0,0,0,.45)}
+#whoMenu.open{display:block}
+#whoMenu h6{margin:7px 0 5px 11px;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--faint);font-weight:500}
+#whoMenu button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+  padding:9px 12px;border-radius:8px;font-size:13.5px;color:var(--mid)}
+#whoMenu button:hover{background:var(--panel);color:var(--ink)}
+#whoMenu button .n{margin-left:auto;font-size:11px;font-family:'IBM Plex Mono',monospace;
+  color:var(--faint)}
+#whoMenu hr{border:none;border-top:1px solid var(--rule);margin:7px 5px}
+
+/* ---- the pills across the top of the canvas ---- */
+/* anchored top left of the canvas, so it never moves when what is in it changes */
+#pills{position:fixed;top:70px;left:0;right:0;z-index:45;display:flex;justify-content:flex-start;
+  align-items:center;gap:4px;pointer-events:none;flex-wrap:wrap;padding:0 20px}
+#pills .pipe{width:1px;height:18px;background:var(--rule);margin:0 12px;flex:none}
+#pills button{pointer-events:auto;background:var(--panel);border:1px solid var(--rule);
+  border-radius:999px;padding:3px 9px;font-size:10.5px;color:var(--mid);
+  box-shadow:0 2px 9px rgba(0,0,0,.22)}
+#pills button:hover{color:var(--ink);border-color:var(--faint)}
+#pills button.on{background:var(--teal);border-color:var(--teal);color:#0d1211;font-weight:500}
+#pills button .n{opacity:.65;margin-left:5px;font-family:'IBM Plex Mono',monospace;font-size:9.5px}
+#crumb{display:flex;align-items:center;gap:9px;font-size:13px;color:#a9b2ad;min-width:0;
+  position:relative;z-index:2}
+#crumb .c{white-space:nowrap;cursor:pointer;padding:3px 0;border-bottom:1px solid transparent}
+#crumb .c:hover{color:#f0ece4;border-bottom-color:#4a534f}
+#crumb .c.here{color:#f0ece4;cursor:default;border-bottom-color:transparent}
+#crumb .sep{color:#5a635f}
+#mark{font-family:'Lora',Georgia,serif;font-size:21px;font-weight:600;letter-spacing:-.01em}
+#mark i{color:var(--teal);font-style:normal}
+#search{margin-left:auto;display:flex;align-items:center;gap:7px;background:#222826;
+  border:1px solid #333b38;border-radius:999px;padding:5px 12px;width:196px;
+  position:relative;z-index:2}
+#search input{font-size:12.5px}
+#search input{background:none;border:none;outline:none;color:#f0ece4;font:inherit;
+  font-size:13.5px;width:100%}
+#search input::placeholder{color:#6d7672}
+#who{display:flex;align-items:center;gap:9px;font-size:13px;color:#a9b2ad;white-space:nowrap}
+#who .av{width:32px;height:28px;background:var(--teal);color:#0d1211;
+  clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);
+  display:grid;place-items:center;font-size:11px;font-weight:700;letter-spacing:.02em}
+
+/* ---- the little i. The explanation is there when she wants it, and out of
+   the way when she does not. ---- */
+.i{display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;
+  border:1px solid currentColor;font-size:9.5px;font-weight:700;font-style:normal;
+  opacity:.55;cursor:help;vertical-align:1px;margin-left:6px;font-family:'DM Sans',sans-serif;
+  letter-spacing:0;text-transform:none;flex:none}
+.i:hover{opacity:1}
+.i{min-width:22px;min-height:22px}
+@media (hover:hover){ .i{min-width:15px;min-height:15px} }
+#tip{position:fixed;z-index:80;display:none;max-width:290px;padding:10px 13px;
+  background:var(--bar);color:#e8e4dc;border:1px solid var(--rule);border-radius:8px;
+  font-size:12.5px;line-height:1.5;box-shadow:0 10px 30px rgba(0,0,0,.35);
+  text-transform:none;letter-spacing:0;font-family:'DM Sans',sans-serif;font-weight:400}
+#tip.on{display:block}
+
+/* ============ the lens rail ============ */
+
+/* collapsed: icons only, so the lenses stay reachable and the canvas gets the room */
+
+/* ============ the surface ============ */
+#stage{position:fixed;top:58px;left:0;right:0;bottom:0;overflow:hidden;
+  touch-action:none;-webkit-user-select:none;user-select:none;
+  background:
+    radial-gradient(circle at 1px 1px,var(--rule) 1px,transparent 0) 0 0/30px 30px,
+    var(--ground);
+  cursor:grab}
+#stage.grabbing{cursor:grabbing}
+#world{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+#world.gliding{transition:transform .4s cubic-bezier(.22,.61,.36,1)}
+.layer{position:absolute;left:0;top:0;transition:opacity .34s ease,transform .34s ease}
+.layer.gone{opacity:0;pointer-events:none}
+
+/* ---- hexagon, the patient tile ---- */
+.hex{position:absolute;width:var(--hexW);height:var(--hexH);cursor:pointer;
+  transition:transform .18s ease}
+.hex .shell{position:absolute;inset:0;background:var(--rule);
+  clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+.hex .face{position:absolute;inset:2px;background:var(--card);
+  clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  padding:0 30px;text-align:center}
+.hex:hover{transform:translateY(-4px)}
+.hex:hover .shell{background:var(--teal)}
+.hex.sel .shell{background:var(--teal)}
+.hex .init{font-family:'Lora',Georgia,serif;font-size:27px;font-weight:600;color:var(--teal);
+  line-height:1}
+.hex .nm{font-size:13px;font-weight:500;line-height:1.2}
+.hex .meta{font-size:10.5px;color:var(--faint);font-family:'IBM Plex Mono',monospace;
+  letter-spacing:.02em}
+.hex .dot{position:absolute;top:24px;right:40px;min-width:19px;height:19px;border-radius:10px;
+  background:var(--alert);color:#fff;font-size:10.5px;font-weight:700;
+  display:grid;place-items:center;padding:0 5px;z-index:3}
+.hex.mine .face{background:var(--teal-soft)}
+.hex.mine .init{color:var(--teal-deep)}
+.hex.dim{opacity:.22;pointer-events:none}
+
+/* ---- session hexagons, smaller ---- */
+.shex{position:absolute;width:132px;height:116px;cursor:pointer;transition:transform .18s ease}
+.shex .shell{position:absolute;inset:0;background:var(--rule);
+  clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+.shex .face{position:absolute;inset:2px;background:var(--card);
+  clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:0 20px;text-align:center;gap:1px}
+.shex:hover{transform:translateY(-3px)}
+.shex:hover .shell,.shex.sel .shell{background:var(--teal)}
+.shex .no{font-family:'Lora',Georgia,serif;font-size:19px;font-weight:600;line-height:1}
+.shex .dt{font-size:9.5px;color:var(--faint);font-family:'IBM Plex Mono',monospace}
+.shex .marks{display:flex;gap:3px;margin-top:4px}
+.shex .marks i{width:5px;height:5px;border-radius:50%;background:var(--rule)}
+.shex .marks i.on{background:var(--teal)}
+.shex .marks i.warn{background:var(--warm)}
+.shex.dim{opacity:.2;pointer-events:none}
+.shex.next .shell{background:var(--warm)}
+.shex.next .face{background:var(--warm-soft)}
+
+/* ============ the map flip ============
+   The hours go round the outside, everything that came up or was shared sits
+   inside, and the lines are the links. */
+.mnode{position:absolute;display:flex;align-items:center;justify-content:center;
+  text-align:center;cursor:pointer;z-index:2;
+  transition:transform .55s cubic-bezier(.22,.9,.3,1),opacity .45s ease}
+.mnode .shell{position:absolute;inset:0;background:var(--rule);
+  clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+.mnode .face{position:absolute;inset:2px;background:var(--card);
+  clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:1px;padding:0 14px}
+.mnode .l1{position:relative;z-index:2;font-size:12px;font-weight:500;line-height:1.15}
+.mnode .l2{position:relative;z-index:2;font-size:9px;color:var(--faint);
+  font-family:'IBM Plex Mono',monospace;letter-spacing:.04em}
+.mnode:hover{transform:scale(1.07)!important;z-index:6}
+.mnode.msess .l1{font-family:'Lora',Georgia,serif;font-size:16px;font-weight:600}
+.mnode.mtopic .shell{background:var(--teal)}
+.mnode.mtopic .face{background:var(--teal-soft)}
+.mnode.mtopic .l1{color:var(--teal-deep)}
+.mnode.mskill .shell{background:var(--warm)}
+.mnode.mskill .face{background:var(--warm-soft)}
+.mnode.mskill .l1{color:var(--warm)}
+.mnode.mres .shell{background:var(--info)}
+.mnode.mres .face{background:color-mix(in srgb,var(--info) 16%,var(--card))}
+.mnode.mcore .shell{background:var(--ink)}
+.mnode.mcore .face{background:var(--panel)}
+.mnode.mcore .l1{font-family:'Lora',Georgia,serif;font-size:22px}
+.mnode.fade{opacity:.13}
+.mnode.picked{transform:scale(1.12)!important;z-index:7}
+.mnode.picked .shell{background:var(--ink)}
+#medges{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;z-index:1}
+#mapctl{position:fixed;bottom:13px;left:0;right:0;z-index:58;display:flex;
+  justify-content:center;pointer-events:none}
+#mapctl .key{pointer-events:auto;align-self:center;font-size:11.5px;color:var(--faint);
+  margin-left:14px;display:flex;align-items:center;gap:5px}
+#mapctl .key i{width:9px;height:9px;border-radius:2px;display:inline-block;margin-left:9px}
+#mapctl .key i:first-child{margin-left:0}
+#mapctl .key .kt{background:var(--teal)}
+#mapctl .key .ks{background:var(--warm)}
+#mapctl .key .kr{background:var(--info)}
+
+/* a border round a group of boards that belong together */
+.frame{position:absolute;border:1px dashed var(--rule);border-radius:16px;z-index:0;
+  pointer-events:none}
+.frame .fl{position:absolute;top:-10px;left:28px;background:var(--ground);padding:0 12px;
+  font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--faint)}
+
+/* ---- the arc label ---- */
+.axis{position:absolute;font-family:'IBM Plex Mono',monospace;font-size:10px;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--faint);white-space:nowrap}
+.axline{position:absolute;height:1px;background:var(--rule)}
+
+/* ---- patient header when she is inside one ---- */
+.phead{position:absolute;display:flex;align-items:center;gap:22px;width:900px}
+.phead .txt{min-width:0}
+.phead h2,.phead .sub{white-space:nowrap}
+.phead .big{position:relative;width:150px;height:132px;flex:none}
+.phead .big .shell{position:absolute;inset:0;background:var(--teal);
+  clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+.phead .big .face{position:absolute;inset:2px;background:var(--teal-soft);
+  clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);
+  display:grid;place-items:center}
+.phead .big .init{font-family:'Lora',Georgia,serif;font-size:36px;font-weight:600;
+  color:var(--teal-deep)}
+.phead h2{font-family:'Lora',Georgia,serif;font-size:32px;font-weight:600;margin:0;
+  letter-spacing:-.02em}
+.phead .sub{color:var(--mid);font-size:13.5px;margin-top:5px}
+.phead .tags{display:flex;gap:7px;margin-top:11px;flex-wrap:wrap}
+.tag{font-size:11px;font-family:'IBM Plex Mono',monospace;letter-spacing:.04em;
+  border:1px solid var(--rule);border-radius:3px;padding:3px 9px;color:var(--mid)}
+.tag.hot{border-color:var(--alert);color:var(--alert);background:var(--alert-soft)}
+.tag.due{border-color:var(--warm);color:var(--warm);background:var(--warm-soft)}
+
+/* ---- cards used by messages and admin ---- */
+.board{position:absolute;display:flex;flex-direction:column;gap:12px}
+.board h3{font-family:'Lora',Georgia,serif;font-size:17px;font-weight:600;margin:0 0 2px}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:15px 17px;
+  width:360px;cursor:pointer;transition:border-color .15s}
+.card:hover{border-color:var(--teal)}
+.card .hd{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.card .hd b{font-size:14px;font-weight:500}
+.card .hd span{font-size:11px;color:var(--faint);font-family:'IBM Plex Mono',monospace;
+  white-space:nowrap}
+.card p{margin:7px 0 0;font-size:13px;color:var(--mid);line-height:1.5}
+.card .bar{height:5px;border-radius:3px;background:var(--panel);margin-top:10px;overflow:hidden}
+.card .bar i{display:block;height:100%;background:var(--teal);border-radius:3px}
+.card.unread{border-left:3px solid var(--alert)}
+.card.paid{border-left:3px solid var(--teal)}
+.card.owing{border-left:3px solid var(--warm)}
+.wa{display:inline-flex;align-items:center;gap:5px;font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--faint);margin-top:9px}
+.wa i{width:7px;height:7px;border-radius:50%;background:#25d366;font-style:normal}
+
+/* ============ the card ============
+   It fills the window with a margin all round, whatever the canvas is doing
+   behind it, and the canvas goes frosted underneath. */
+#scrim{position:fixed;inset:0;z-index:90;display:none;background:rgba(10,12,11,.55);
+  backdrop-filter:blur(14px) saturate(.75);-webkit-backdrop-filter:blur(14px) saturate(.75);
+  animation:fade .18s ease}
+#scrim.on{display:block}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.wcard{position:fixed;top:28px;left:28px;right:28px;bottom:28px;z-index:95;
+  background:var(--card);border:1px solid var(--rule);
+  border-radius:16px;box-shadow:0 30px 90px rgba(0,0,0,.5);display:flex;
+  flex-direction:column;animation:pop .18s ease}
+@keyframes pop{from{opacity:0;transform:translateY(-10px) scale(.99)}to{opacity:1;transform:none}}
+.wch{position:relative;display:flex;align-items:stretch;justify-content:space-between;
+  height:52px;border-bottom:1px solid var(--rule);flex:none}
+.wch .grip{display:none}
+/* the name, session and date sit together on the left of the bar, lined up
+   with the first column under them */
+.wch .ttl{display:flex;align-items:center;margin-right:auto;padding-left:34px;
+  font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);
+  font-family:'IBM Plex Mono',monospace;white-space:nowrap;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+/* close runs the full height of the bar, hard against the edge, the same on
+   every card in the design */
+.wch .x{display:flex;align-items:center;font-size:12px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--faint);padding:0 26px;flex:none;
+  border-radius:0 15px 0 0}
+.wch .x:hover{color:var(--ink);background:var(--panel)}
+/* Three columns across the top, two across the bottom. */
+.wcb{padding:26px 34px 34px;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain}
+.crow{display:grid;gap:0 34px;align-items:start}
+.crow3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.crow2{grid-template-columns:repeat(2,minmax(0,1fr))}
+/* Topics and skills stay put at the foot of the card while the rest scrolls. */
+.wcf{flex:none;border-top:1px solid var(--rule);padding:22px 34px 24px;
+  background:var(--card);border-radius:0 0 15px 15px}
+.crow > div{min-width:0}
+.crow > div + div{border-left:1px solid var(--rule);padding-left:32px}
+.wcb .sect:first-child{margin-top:0}
+/* Two sections stacked in one column get real air between them, and the gap
+   grows with the height of the window rather than staying a fixed number. */
+.crow .sect + .sect{margin-top:clamp(28px,5.5vh,72px)}
+.wcard .eyebrow{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);
+  font-family:'IBM Plex Mono',monospace}
+.wcard h1{font-family:'Lora',Georgia,serif;font-size:29px;font-weight:600;margin:9px 0 0;
+  letter-spacing:-.02em}
+.wcard .when{color:var(--mid);font-size:13.5px;margin-top:5px}
+.sect{margin-top:26px}
+.sect h5{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);
+  margin:0 0 9px;font-family:'IBM Plex Mono',monospace;font-weight:500}
+.sect .body{font-size:14.5px;line-height:1.68;color:var(--ink)}
+.verbatim{background:var(--panel);border-left:3px solid var(--teal);border-radius:0 8px 8px 0;
+  padding:15px 18px}
+.verbatim .by{font-size:11px;color:var(--faint);margin-top:11px;font-family:'IBM Plex Mono',monospace}
+.note{border:1px solid var(--rule);border-radius:8px;padding:13px 15px;margin-bottom:9px}
+.note .by{font-size:11px;color:var(--faint);margin-bottom:5px;font-family:'IBM Plex Mono',monospace}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12px;border:1px solid var(--teal);color:var(--teal);background:var(--teal-soft);
+  border-radius:999px;padding:4px 11px}
+.chip.off{border-color:var(--rule);color:var(--faint);background:none}
+.chip.first{border-color:var(--warm);color:var(--warm);background:var(--warm-soft)}
+.chip.first i{font-style:normal;margin-left:6px;font-size:14px;line-height:0;vertical-align:-1px}
+.res{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--rule);
+  font-size:13.5px}
+.res:last-child{border-bottom:none}
+.res .ic{width:24px;height:24px;border-radius:5px;background:var(--panel);display:grid;
+  place-items:center;font-size:11px;color:var(--mid);flex:none}
+.res .gr{margin-left:auto;font-size:11px;color:var(--faint);font-family:'IBM Plex Mono',monospace}
+.wcard textarea{width:100%;border:1px solid var(--rule);border-radius:8px;padding:12px 14px;
+  font:inherit;font-size:14px;background:var(--ground);color:var(--ink);resize:vertical;
+  min-height:76px;outline:none;-webkit-user-select:text;user-select:text}
+.wcard textarea:focus{border-color:var(--teal)}
+.wcard .body,.wcard .note,.wcard .verbatim{-webkit-user-select:text;user-select:text}
+.btn{background:var(--teal);color:#fff;border-radius:7px;padding:9px 18px;font-size:13.5px;
+  font-weight:500;margin-top:10px}
+.btn:hover{background:var(--teal-deep)}
+
+/* ============ bits ============ */
+#hint{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;z-index:58;
+  font-size:11.5px;color:var(--faint);white-space:nowrap}
+#zoomer{position:fixed;right:20px;bottom:18px;z-index:58;display:flex;gap:5px;
+  background:var(--card);border:1px solid var(--rule);border-radius:9px;padding:5px}
+#zoomer button{padding:5px 11px;font-size:13px;color:var(--mid);border-radius:5px}
+#zoomer button:hover{background:var(--panel);color:var(--ink)}
+#empty{position:absolute;color:var(--faint);font-size:14px}
+/* ============ on a tablet ============
+   Wendy is on an iPad, so this is the size the design actually gets judged at. */
+@media (max-width:1200px){
+  .crow3{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .crow > div + div{border-left:none;padding-left:0}
+  .crow{gap:0 26px}
+  .crow .sect + .sect{margin-top:clamp(24px,4vh,48px)}
+}
+@media (max-width:860px){
+  .crow3,.crow2{grid-template-columns:1fr}
+  .crow > div + div{margin-top:clamp(24px,4vh,48px)}
+  .wcard{top:12px;left:12px;right:12px;bottom:12px;border-radius:14px}
+  .wcb{padding:20px 22px 24px}
+  .wcf{padding:16px 22px 18px}
+  .wch{height:46px}
+  .wch .ttl{padding-left:22px;font-size:11px}
+  .wch .x{padding:0 18px}
+  #top{gap:10px;padding:0 12px}
+  #who{position:static;transform:none;margin:0 auto}
+  #who .nm{display:none}
+  #search{width:130px;padding:4px 10px}
+  #search input{font-size:12px}
+  #mark{font-size:18px}
+  #crumb{font-size:12px}
+  #hint{display:none}
+  .sim{left:12px}
+  #pills{padding:0 12px}
+}
+
+.sim{position:fixed;left:20px;bottom:13px;z-index:58;font-size:10px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--warm);border:1px dashed var(--warm);border-radius:3px;
+  padding:4px 9px;background:var(--warm-soft);font-family:'IBM Plex Mono',monospace}
+</style>
+</head>
+<body>
+
+<div id="top">
+  <div id="mark">flow<i>.</i></div>
+  <div id="crumb"></div>
+  <div id="who" title="your account and the practice"><span class="av">WR</span><span class="nm">Wendy Rossouw</span></div>
+  <div id="whoMenu"></div>
+  <div id="search"><span style="opacity:.5">⌕</span><input id="q" placeholder="Search patients, sessions, skills"></div>
+</div>
+
+
+<div class="sim">simulated data</div>
+
+<div id="stage"><div id="world"></div></div>
+<div id="scrim"></div>
+<div id="cards"></div>
+<div id="pills"></div>
+<div id="mapctl"></div>
+<div id="tip"></div>
+
+<div id="hint">Drag to move. Scroll to zoom. Click a patient to go in, Escape to come back out.</div>
+<div id="zoomer"><button id="zo">−</button><button id="zi">+</button><button id="zf">fit</button></div>
+
+
+<script>
+(function(){
+"use strict";
+
+/* ===================================================================
+   SIMULATED DATA. None of this is real clinical material.
+   Schalk is the one patient who exists in flow today. The rest of the
+   caseload is invented so the shape of the screen can be judged.
+   =================================================================== */
+
+var SKILLS=['Wise Mind','Radical Acceptance','Opposite Action','Check the Facts','TIPP',
+            'DEAR MAN','GIVE','FAST','PLEASE','Self-Soothe','Half-Smile','Paced Breathing',
+            'Pros and Cons','Mindfulness of Current Emotion','Building Mastery'];
+
+var SUMMARIES=[
+ 'We picked up where the last hour ended, on the gap between deciding something and starting it. He described the decision landing cleanly and then evaporating an hour later. We named that as a re-entry problem rather than a motivation one, which changed what we looked at next.',
+ 'Most of the hour went to the argument on Sunday. He could describe what he felt but not what he wanted, so we worked the ask out loud until it was one sentence. He wrote it down. He has not sent it yet and that is fine.',
+ 'A quieter session. He arrived flat and left level. We stayed with the body for the first twenty minutes because the words were not there, and they came back once the breathing slowed.',
+ 'He brought the pattern of starting something new whenever the current thing gets uncomfortable. We traced three examples and the trigger was the same each time, a moment where he could not tell whether he was doing it right.',
+ 'We looked at the week through the diary card. The two worst days both followed nights under five hours. He resisted the link and then accepted it, which is the first time sleep has been on the table.',
+ 'Work came up properly for the first time. The fear is not of failing, it is of being seen trying. We left it open rather than solving it.',
+ 'He was late and irritated about being late. We used the irritation rather than parking it, and it turned out to be about a promise he made to himself that he did not keep.'
+];
+
+var NOTE_BY_HER=[
+ 'She flagged that the ask he wrote is still unsent, and asked him to notice what happens in the hour before he would send it.',
+ 'She asked him to fill the card on the two days after a short night, not every day. Smaller and more likely.',
+ 'She named the pattern back to him in his own words and asked him to catch it once, not stop it.'
+];
+var NOTE_BY_HIM=[
+ 'Did not send it. Wrote a second version that was worse. Left it.',
+ 'Filled it Tuesday and Thursday. Thursday was a four hour night and the card shows it.',
+ 'Caught it once, on Friday afternoon, about ten minutes in. Did not stop, but I saw it.'
+];
+
+var HOMEWORK=[
+ 'Notice the hour before you would send the message. Write down what you are doing instead.',
+ 'Fill the diary card on the two days after a short night. Only those two.',
+ 'Catch the switch once this week. You do not have to stop it.',
+ 'Paced breathing, twice, before the Thursday meeting.',
+ 'Write the ask in one sentence and leave it in the notes here.'
+];
+
+var MSG_IN=[
+ 'Morning Wendy, can we move Saturday to the afternoon? Something came up in the morning.',
+ 'I did the card two days this week. Thursday was rough.',
+ 'Sorry for the late reply, this week got away from me.',
+ 'Sent through the workbook pages, let me know if they came out legible.',
+ 'Can I ask you something before Saturday, it is about the ask we wrote.'
+];
+var MSG_OUT=[
+ 'Afternoon works. Shall we say two o clock.',
+ 'Two days is enough. Bring the card on Saturday and we will read it together.',
+ 'No need to apologise. See you Saturday.',
+ 'Got them, all legible. I will add the chapter on emotion regulation.',
+ 'Of course. Bring it Saturday, or write it in the notes and I will read it before.'
+];
+
+/* The one place that reads the payment field. Notion can hand this back as a
+   select, a checkbox, a number or text depending on how the column is set up,
+   so read it loosely and say "not set" rather than inventing an answer. */
+function payState(v){
+  if(v===true) return 'paid';
+  if(v===false || v===null || v===undefined || v==='') return 'unknown';
+  if(typeof v==='number') return v>0 ? 'paid' : 'unpaid';
+  var t=String(v).trim().toLowerCase();
+  if(!t) return 'unknown';
+  if(t.indexOf('unpaid')>=0 || t.indexOf('outstanding')>=0 || t.indexOf('due')>=0 ||
+     t.indexOf('owing')>=0 || t==='no' || t==='false') return 'unpaid';
+  if(t.indexOf('paid')>=0 || t==='yes' || t==='true' || t.indexOf('settled')>=0) return 'paid';
+  var n=Number(t); if(!isNaN(n)) return n>0 ? 'paid' : 'unpaid';
+  return 'unknown';
+}
+function payWord(st){ return st==='paid' ? 'paid' : st==='unpaid' ? 'outstanding' : 'not set'; }
+
+function iso(d){ return d.toISOString().slice(0,10); }
+function fmt(d){ return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}); }
+function fmtShort(d){ return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}); }
+function pick(a,i){ return a[i%a.length]; }
+
+/* Single word labels lifted off the summaries, so she can see what keeps coming
+   back and what has only just been said out loud. */
+var TOPICS=['parents','school work','relationship','friendships','connection','sleep',
+            'money','work','self-criticism','avoidance','family','boundaries',
+            'loneliness','anger','the body','shame','routine','asking for help'];
+
+function makeSessions(n,startDaysAgo,seed){
+  var out=[],today=new Date(2026,8,30);
+  for(var i=0;i<n;i++){
+    var d=new Date(today); d.setDate(d.getDate()-(startDaysAgo+(n-1-i)*7));
+    var k=(i+seed);
+    var noteTime=function(h){ var t=new Date(d); t.setHours(h,(k*7)%60,0,0); return t; };
+    out.push({
+      no:i+1, date:d,
+      topics:[pick(TOPICS,k*3),pick(TOPICS,k*3+5),pick(TOPICS,k*3+11)]
+             .filter(function(v,j,a){ return a.indexOf(v)===j; }),
+      noteTimes:[noteTime(11),noteTime(19)],
+      summary:pick(SUMMARIES,k),
+      homework:pick(HOMEWORK,k),
+      hwDone:(k%3)!==0,
+      skills:[pick(SKILLS,k),pick(SKILLS,k+4),pick(SKILLS,k+9)],
+      notes:[{by:'Wendy',t:pick(NOTE_BY_HER,k)},{by:'the patient',t:pick(NOTE_BY_HIM,k+1)}].slice(0,(k%3)===0?1:2),
+      resources:[{k:'video',t:'Opposite Action, walked through',g:'11 min'},
+                 {k:'pdf',t:'Workbook, emotion regulation',g:'6 pages'}].slice(0,(k%2)?2:1),
+      /* Named and shaped like the real thing. api/sessions.js already returns
+         readProp(p['payment']) for every row, and nothing has ever shown it. */
+      payment:(k%7)!==0 ? 'Paid' : 'Unpaid'
+    });
+  }
+  return out;
+}
+
+var PATIENTS=[
+ {id:'schalk',name:'Schalk J',init:'SJ',mine:true,n:23,gap:5,seed:0,
+  since:'Nov 2025',focus:'Emotion regulation, distress tolerance',unread:2,owing:0},
+ {id:'marike',name:'Marike D',init:'MD',n:11,gap:2,seed:3,
+  since:'May 2026',focus:'Interpersonal effectiveness',unread:0,owing:1},
+ {id:'thabo', name:'Thabo N',init:'TN',n:7,gap:9,seed:5,
+  since:'Jul 2026',focus:'Mindfulness, early stage',unread:1,owing:0},
+ {id:'ilse',  name:'Ilse v R',init:'IR',n:19,gap:1,seed:2,
+  since:'Jan 2026',focus:'Distress tolerance',unread:0,owing:0},
+ {id:'pieter',name:'Pieter B',init:'PB',n:3,gap:16,seed:7,
+  since:'Sep 2026',focus:'Assessment, not yet placed',unread:3,owing:1},
+ {id:'anja',  name:'Anja K',init:'AK',n:14,gap:4,seed:1,
+  since:'Mar 2026',focus:'Emotion regulation',unread:0,owing:0},
+ {id:'ruan',  name:'Ruan S',init:'RS',n:9,gap:12,seed:6,
+  since:'Jun 2026',focus:'Interpersonal effectiveness',unread:1,owing:0}
+];
+PATIENTS.forEach(function(p){
+  p.sessions=makeSessions(p.n,p.gap,p.seed);
+  /* the first time a topic is spoken about is worth seeing */
+  var seenTopic={};
+  p.sessions.forEach(function(s){
+    s.topicsNew={};
+    s.topics.forEach(function(t){
+      if(!seenTopic[t]){ seenTopic[t]=1; s.topicsNew[t]=1; }
+    });
+  });
+  p.last=p.sessions[p.sessions.length-1].date;
+  p.next=new Date(p.last); p.next.setDate(p.next.getDate()+7);
+  p.threads=[];
+  for(var i=0;i<4;i++){
+    var d=new Date(p.last); d.setDate(d.getDate()+i-2);
+    p.threads.push({from:i%2?'Wendy':p.name,when:d,
+      t:i%2?pick(MSG_OUT,p.seed+i):pick(MSG_IN,p.seed+i),
+      unread:(i===3 && p.unread>0)});
+  }
+  /* The other three surfaces the app already has, from her side.
+     Structures taken from the real screens in flow/shots. */
+  var WB=[['Mindfulness','🧠',7],['Distress Tolerance','🧊',7],
+          ['Emotion Regulation','🌱',8],['Interpersonal Effectiveness','🤝',6]];
+  p.workbook=WB.map(function(w,i){
+    return {n:w[0], icon:w[1], total:w[2],
+            done:Math.max(0,Math.min(w[2], w[2]-((p.seed+i*2)%(w[2]+1))))};
+  });
+  p.library=[
+   {k:'video',t:'Introduction to Radical Acceptance',m:'Video · YouTube · 28 Apr',by:'you'},
+   {k:'pdf',  t:'Emotion Regulation Worksheet',      m:'PDF · workbook excerpt · 25 Apr',by:'you'},
+   {k:'video',t:'TIPP Walkthrough',                  m:'Video · YouTube · 21 Apr',by:'you'},
+   {k:'audio',t:'Voice note, after the difficult conversation',m:'Audio · 2 min 14 · 1 May',by:'them'},
+   {k:'link', t:'Article on sensory regulation',     m:'Link · 29 Apr',by:'them'}
+  ].slice(0, 3+((p.seed)%3));
+  var PR=[['TIPP','Distress tolerance',10],['Paced Breathing','Regulation',5],
+          ['Grounding 5-4-3-2-1','Mindfulness',4],['STOP Skill','Distress tolerance',2],
+          ['Self-Soothe (Five Senses)','Distress tolerance',6],
+          ['Opposite Action','Emotion regulation',7],['Wise Mind Check-In','Mindfulness',3],
+          ['Radical Acceptance','Distress tolerance',8],
+          ['Progressive Muscle Relaxation','Regulation',9],
+          ['Cold Water Reset','Distress tolerance',2]];
+  p.practices=PR.map(function(r,i){
+    return {n:r[0], c:r[1], mins:r[2], used:(p.seed*3+i*5)%13};
+  });
+  rebuildAccount(p);
+});
+
+/* Built off the payment field, so it is right whether the rows are simulated
+   or came back from the API. */
+function rebuildAccount(p){
+  p.invoices=p.sessions.slice(-6).map(function(s){
+    return {no:s.no, date:s.date, amount:950, state:payState(s.payment)};
+  });
+  p.owing=p.invoices.filter(function(v){ return v.state==='unpaid'; }).length;
+}
+
+/* =================================================================== */
+
+var stage=document.getElementById('stage'), world=document.getElementById('world'),
+    cardsEl=document.getElementById('cards'), qEl=document.getElementById('q');
+
+/* ---------- the little i ----------
+   Every footnote that used to sit on the screen lives behind one of these. */
+function info(text){ return '<span class="i" data-tip="'+esc(text).replace(/"/g,'&quot;')+'">i</span>'; }
+var tipEl=document.getElementById('tip');
+function showTip(i){
+  tipEl.textContent=i.getAttribute('data-tip');
+  tipEl.classList.add('on');
+  var r=i.getBoundingClientRect(), t=tipEl.getBoundingClientRect();
+  tipEl.style.left=Math.max(10,Math.min(window.innerWidth-t.width-10,r.left-10))+'px';
+  tipEl.style.top=Math.min(window.innerHeight-t.height-10, r.bottom+9)+'px';
+}
+document.addEventListener('mouseover',function(e){
+  var i=e.target.closest('.i'); if(!i) return; showTip(i);
+});
+document.addEventListener('mouseout',function(e){
+  if(e.target.closest('.i')) tipEl.classList.remove('on');
+});
+/* on a finger there is no hover, so a tap opens it and the next tap closes it */
+document.addEventListener('click',function(e){
+  var i=e.target.closest('.i');
+  if(!i){ tipEl.classList.remove('on'); return; }
+  e.stopPropagation(); e.preventDefault();
+  if(tipEl.classList.contains('on') && tipEl.__for===i){ tipEl.classList.remove('on'); tipEl.__for=null; return; }
+  tipEl.__for=i; showTip(i);
+},true);
+
+var V={x:0,y:0,z:1};
+var LENS='patients', HERE=null, Q='', LIVE=false;
+
+function T(){ world.style.transform='translate('+V.x+'px,'+V.y+'px) scale('+V.z+')'; }
+function el(tag,cls,html){ var d=document.createElement(tag); if(cls)d.className=cls;
+  if(html!=null)d.innerHTML=html; return d; }
+function esc(t){ return String(t).replace(/[&<>]/g,function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; }); }
+function match(hay){ return !Q || String(hay).toLowerCase().indexOf(Q)>=0; }
+
+
+
+/* ---------- level 0, the caseload ---------- */
+function drawCaseload(){
+  var W=196,H=172, cols=4, layer=el('div','layer');
+  var hive=el('div'); hive.dataset.region='patients';
+  var rows=Math.ceil(PATIENTS.length/cols);
+  hive.style.cssText='position:absolute;left:60px;top:30px;width:'+(cols*(W*0.76)+W*0.3)+
+    'px;height:'+(rows*H+H)+'px';
+  layer.appendChild(hive);
+  var shown=PATIENTS.filter(function(p){
+    return match(p.name)||match(p.focus)||
+      p.sessions.some(function(s){ return s.skills.some(match); });
+  });
+  if(!shown.length){
+    var e=el('div','','No patient matches that.'); e.id='empty';
+    e.style.cssText='left:40px;top:40px'; layer.appendChild(e);
+  }
+  shown.forEach(function(p,i){
+    var c=i%cols, r=Math.floor(i/cols);
+    var x=c*(W*0.76), y=40+r*H+(c%2?H/2:0);
+    var h=el('div','hex'+(p.mine?' mine':''));
+    h.style.cssText='left:'+x+'px;top:'+y+'px';
+    h.innerHTML='<span class="shell"></span><span class="face">'+
+      '<span class="init">'+esc(p.init)+'</span>'+
+      '<span class="nm">'+esc(p.name)+'</span>'+
+      '<span class="meta">'+p.n+' sessions</span>'+
+      '<span class="meta">next '+fmtShort(p.next)+'</span></span>'+
+      (p.unread?'<span class="dot">'+p.unread+'</span>':'');
+    h.onclick=function(ev){ ev.stopPropagation(); go(p); };
+    hive.appendChild(h);
+  });
+
+  var lbl=el('div','axis','The whole practice, '+shown.length+' of '+PATIENTS.length+' shown');
+  lbl.style.cssText='left:0;top:6px'; hive.appendChild(lbl);
+
+  /* One row, left to right, the same as inside a patient. Nothing sits under
+     anything else, so nothing can overlap it. */
+  var x1=60+cols*(W*0.76)+70;          // needs you
+  var x2=x1+400+40;                     // everyone's messages
+  var x3=x2+440+40;                     // everyone's account
+  var note=el('div','board');
+  note.style.cssText='left:'+x1+'px;top:70px;width:400px';
+  note.innerHTML='<h3>Needs you'+info('Anyone with an unread message or an unpaid session. '+
+    'Click a name to go into them.')+'</h3>';
+  PATIENTS.filter(function(p){ return p.unread||p.owing; }).forEach(function(p){
+    var c=el('div','card '+(p.unread?'unread':'owing'),
+      '<div class="hd"><b>'+esc(p.name)+'</b><span>'+fmtShort(p.next)+'</span></div>'+
+      '<p>'+(p.unread?p.unread+' unread on WhatsApp':'')+
+      (p.unread&&p.owing?'. ':'')+(p.owing?p.owing+' session unpaid':'')+'</p>');
+    c.onclick=function(){ go(p); };
+    note.appendChild(c);
+  });
+  layer.appendChild(note);
+
+  /* Everyone's threads and everyone's money, on the same plane as the honeycomb. */
+  var mb=el('div','board'); mb.dataset.region='messages';
+  mb.style.cssText='left:'+x2+'px;top:70px;width:440px';
+  mb.innerHTML='<h3>Messages, everyone'+info('The latest thread from each patient. '+
+    'Go into one and this narrows to only theirs.')+'</h3>';
+  PATIENTS.forEach(function(p){
+    var m=p.threads[p.threads.length-1];
+    var c=el('div','card'+(p.unread?' unread':''),
+      '<div class="hd"><b>'+esc(p.name)+'</b><span>'+fmtShort(m.when)+'</span></div>'+
+      '<p>'+esc(m.t)+'</p><span class="wa"><i></i>WhatsApp, mirrored into flow</span>');
+    c.onclick=function(){ go(p); };
+    mb.appendChild(c);
+  });
+  layer.appendChild(mb);
+
+  var ab=el('div','board'); ab.dataset.region='admin';
+  ab.style.cssText='left:'+x3+'px;top:70px;width:440px';
+  ab.innerHTML='<h3>Account, everyone'+info('Built from the payment column on each session '+
+    'row, the same field the app already returns.')+'</h3>';
+  PATIENTS.forEach(function(p){
+    var due=p.invoices.filter(function(v){ return v.state==='unpaid'; }).length;
+    var c=el('div','card '+(due?'owing':'paid'),
+      '<div class="hd"><b>'+esc(p.name)+'</b><span>'+(due?due+' due':'settled')+'</span></div>'+
+      '<p>R'+(p.invoices.length*950)+'.00 across the last '+p.invoices.length+' sessions</p>');
+    c.onclick=function(){ go(p); };
+    ab.appendChild(c);
+  });
+  layer.appendChild(ab);
+  return layer;
+}
+
+/* ---------- level 1, one patient ---------- */
+function drawPatient(p){
+  var layer=el('div','layer');
+
+  var head=el('div','phead');
+  head.style.cssText='left:60px;top:40px';
+  head.innerHTML='<div class="big"><span class="shell"></span><span class="face">'+
+    '<span class="init">'+esc(p.init)+'</span></span></div>'+
+    '<div class="txt"><h2>'+esc(p.name)+'</h2>'+
+    '<div class="sub">'+esc(p.focus)+'. With you since '+esc(p.since)+'.</div>'+
+    '<div class="tags"><span class="tag">'+p.n+' sessions</span>'+
+    '<span class="tag">next '+fmt(p.next)+'</span>'+
+    (p.unread?'<span class="tag hot">'+p.unread+' unread</span>':'')+
+    (p.owing?'<span class="tag due">'+p.owing+' unpaid</span>':'')+
+    (p.mine?'<span class="tag">the one real patient in flow today</span>':'')+
+    '</div></div>';
+  layer.appendChild(head);
+
+  /* on the map the name is in the trail at the top, so it is not said again */
+  if(MAP){ head.remove(); layer.appendChild(drawMap(p)); return layer; }
+
+  /* Everything this person has, on one plane, all at once.
+     Links and videos, the workbook and the practices are one thing, so they sit
+     inside a border called Resources. Messages and the account stand apart. */
+  layer.appendChild(drawArc(p));
+  var y=790, w=440, gap=40;
+  var inner=[
+    drawLibrary(p,   60,           y, w),
+    drawWorkbook(p,  60+(w+gap),   y, w),
+    drawPractices(p, 60+(w+gap)*2, y, w)
+  ];
+  var frame=el('div','frame');
+  frame.dataset.region='resources';
+  frame.innerHTML='<span class="fl">Resources</span>';
+  layer.appendChild(frame);
+  inner.forEach(function(b){ layer.appendChild(b); });
+
+  var apart=60+(w+gap)*3+130;                     // clear air before the next two
+  layer.appendChild(drawMessages(p, apart,       y, w));
+  layer.appendChild(drawAdmin(p,    apart+w+gap, y, w));
+
+  /* the border is drawn round whatever those three turn out to be */
+  requestAnimationFrame(function(){
+    var h=0;
+    inner.forEach(function(b){ h=Math.max(h,b.offsetHeight); });
+    frame.style.cssText='position:absolute;left:24px;top:'+(y-56)+'px;width:'+
+      ((w+gap)*2+w+72)+'px;height:'+(h+92)+'px';
+  });
+  return layer;
+}
+
+/* ---------- the map flip ----------
+   Three arrangements, so the shape of it can be judged rather than described.
+   Every link in here is simulated: nothing in flow records that a resource
+   teaches a skill, or that a skill belongs to a topic. */
+var MAP=false, MAPMODE='flow', SEL=null;
+var MAPMODES=[['flow','hours, issues, skills, resources'],
+              ['person','the person at the centre'],
+              ['skills','skills on the outside ring']];
+
+function drawMap(p){
+  var wrap=el('div'); wrap.dataset.region='map';
+  var CX=820, CY=780;
+  wrap.style.cssText='position:absolute;left:0;top:0;width:'+(CX*2)+'px;height:'+(CY*2)+'px';
+
+  var svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('id','medges');
+  svg.setAttribute('width',CX*2); svg.setAttribute('height',CY*2);
+  wrap.appendChild(svg);
+
+  /* what is in this person's world */
+  var topics=[], skills=[], res=[];
+  p.sessions.forEach(function(s){
+    s.topics.forEach(function(t){ if(topics.indexOf(t)<0) topics.push(t); });
+    s.skills.forEach(function(k){ if(skills.indexOf(k)<0) skills.push(k); });
+  });
+  p.library.forEach(function(r){ if(res.indexOf(r.t)<0) res.push(r.t); });
+
+  /* Simulated. Nothing in flow records which skill answers which issue, or
+     which resource teaches which skill. These are made up and stable. */
+  function hash(str){ var h=0; for(var i=0;i<str.length;i++) h=(h*31+str.charCodeAt(i))|0; return Math.abs(h); }
+  var topicSkill={}, skillRes={};
+  topics.forEach(function(t){
+    var h=hash(t);
+    topicSkill[t]=[skills[h%skills.length], skills[(h>>3)%skills.length]]
+      .filter(function(v,i,a){ return v && a.indexOf(v)===i; });
+  });
+  res.forEach(function(r){
+    var h=hash(r);
+    skillRes[r]=[skills[h%skills.length], skills[(h>>5)%skills.length]]
+      .filter(function(v,i,a){ return v && a.indexOf(v)===i; });
+  });
+
+  /* the layers, outside to inside. His order: the hours raise the issues, the
+     issues are answered by skills, the skills are learned from what you send. */
+  var layers;
+  if(MAPMODE==='flow')        layers=[['msess',null,640],['mtopic',topics,430],['mskill',skills,240],['mres',res,86]];
+  else if(MAPMODE==='person') layers=[['msess',null,640],['mtopic',topics,440],['mskill',skills,270],['mres',res,130]];
+  else                        layers=[['msess',null,640],['mskill',skills,430],['mtopic',topics,240],['mres',res,86]];
+
+  var pos={}, nodes=[], adj={};
+  function link(a,b){ (adj[a]=adj[a]||[]).push(b); (adj[b]=adj[b]||[]).push(a); }
+  function place(cls,label,sub,x,y,w,h,key,click){
+    var n=el('div','mnode '+cls);
+    n.style.cssText='left:'+(x-w/2)+'px;top:'+(y-h/2)+'px;width:'+w+'px;height:'+h+'px';
+    n.innerHTML='<span class="shell"></span><span class="face">'+
+      '<span class="l1">'+esc(label)+'</span>'+(sub?'<span class="l2">'+esc(sub)+'</span>':'')+
+      '</span>';
+    n.dataset.key=key;
+    pos[key]={x:x,y:y};
+    n.onclick=function(ev){ ev.stopPropagation(); if(click) click(); else pick(key); };
+    wrap.appendChild(n); nodes.push(n);
+    return n;
+  }
+
+  if(MAPMODE==='person') place('mcore',p.init,p.name,CX,CY,150,132,'core');
+
+  layers.forEach(function(L){
+    var cls=L[0], list=L[1], rad=L[2];
+    if(cls==='msess'){
+      p.sessions.forEach(function(s,i){
+        var a=(i/p.sessions.length)*Math.PI*2 - Math.PI/2;
+        place('msess', String(s.no), fmtShort(s.date),
+              CX+Math.cos(a)*rad, CY+Math.sin(a)*rad, 118, 104, 'sess:'+s.no,
+              function(){ openSession(p,s); });
+      });
+      return;
+    }
+    list.forEach(function(v,i){
+      var a=(i/list.length)*Math.PI*2 - Math.PI/2 + rad/1400;
+      var w = cls==='mres' ? 176 : 128, h = cls==='mres' ? 154 : 112;
+      /* what she sent opens, it does not filter: she wants to see the thing */
+      var click = cls==='mres' ? function(){ openResource(p, v, skillRes[v]||[]); } : null;
+      place(cls, v.length>(cls==='mres'?22:16) ? v.slice(0,cls==='mres'?21:15)+'…' : v,
+            cls==='mres' ? 'open' : '',
+            CX+Math.cos(a)*rad, CY+Math.sin(a)*rad, w, h, cls+':'+v, click);
+    });
+  });
+
+  /* the links, and the same links as a graph so a click can walk them */
+  var lines='';
+  function line(a,b,colour,op,dash){
+    var A=pos[a], B=pos[b]; if(!A||!B) return;
+    lines+='<line data-a="'+a+'" data-b="'+b+'" x1="'+A.x+'" y1="'+A.y+'" x2="'+B.x+'" y2="'+B.y+
+           '" stroke="'+colour+'" stroke-width="1.2" opacity="'+op+'"'+
+           (dash?' stroke-dasharray="5 4"':'')+'/>';
+    link(a,b);
+  }
+  p.sessions.forEach(function(s){
+    s.topics.forEach(function(t){ line('sess:'+s.no,'mtopic:'+t,'var(--teal)','.3'); });
+  });
+  topics.forEach(function(t){
+    (topicSkill[t]||[]).forEach(function(k){ line('mtopic:'+t,'mskill:'+k,'var(--warm)','.34'); });
+  });
+  res.forEach(function(r){
+    (skillRes[r]||[]).forEach(function(k){ line('mres:'+r,'mskill:'+k,'var(--info)','.5',1); });
+  });
+  svg.innerHTML=lines;
+
+  /* click anything and only what it touches, two steps out, stays lit */
+  function near(key){
+    var seen={}, q=[[key,0]]; seen[key]=1;
+    while(q.length){
+      var cur=q.shift();
+      if(cur[1]>=2) continue;
+      (adj[cur[0]]||[]).forEach(function(n){
+        if(seen[n]) return; seen[n]=1; q.push([n,cur[1]+1]);
+      });
+    }
+    seen['core']=1;
+    return seen;
+  }
+  function paintPick(){
+    var keep = SEL ? near(SEL) : null;
+    [].forEach.call(wrap.querySelectorAll('.mnode'),function(n){
+      n.classList.toggle('fade', !!keep && !keep[n.dataset.key]);
+      n.classList.toggle('picked', SEL===n.dataset.key);
+    });
+    [].forEach.call(svg.querySelectorAll('line'),function(l){
+      var on = !keep || (keep[l.getAttribute('data-a')] && keep[l.getAttribute('data-b')]);
+      l.style.opacity = !keep ? '' : (on ? '.9' : '.04');
+    });
+  }
+  function pick(key){ SEL = (SEL===key) ? null : key; paintPick(); }
+  wrap.__clear=function(){ SEL=null; paintPick(); };
+  if(SEL) requestAnimationFrame(paintPick);
+
+  /* form the circle */
+  nodes.forEach(function(n){
+    var r=pos[n.dataset.key];
+    n.style.transform='translate('+(CX-r.x)+'px,'+(CY-r.y)+'px) scale(.25)';
+    n.style.opacity='0';
+  });
+  svg.style.opacity='0';
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){
+    nodes.forEach(function(n,i){
+      n.style.transitionDelay=(i%14)*18+'ms';
+      n.style.transform='none'; n.style.opacity='1';
+    });
+    svg.style.transition='opacity .6s ease .25s'; svg.style.opacity='1';
+  }); });
+
+  return wrap;
+}
+
+/* the arrangement lives on the toolbar with fit and the zoom, and cycles */
+/* what she sent, opened on its own */
+function openResource(p,title,teaches){
+  var r=null;
+  p.library.forEach(function(x){ if(x.t===title) r=x; });
+  if(!r) return;
+  var kind={video:'Video',pdf:'Workbook pages',audio:'Voice note',link:'Link'}[r.k]||'File';
+  var sent=p.sessions.filter(function(s){
+    return s.skills.some(function(k){ return teaches.indexOf(k)>=0; });
+  });
+  openCard({
+   title:p.name+' · '+kind.toLowerCase(),
+   html:
+   '<div class="crow crow3">'+
+     '<div>'+
+       '<div class="sect"><h5>'+esc(kind)+'</h5>'+
+       '<div class="body" style="font-family:Lora,Georgia,serif;font-size:22px;line-height:1.25">'+
+       esc(r.t)+'</div>'+
+       '<div class="body" style="color:var(--mid);margin-top:8px">'+esc(r.m)+'</div>'+
+       '<div class="chips" style="margin-top:12px"><span class="chip'+(r.by==='you'?'':' off')+'">'+
+       (r.by==='you'?'you sent this':'they added this')+'</span></div></div>'+
+     '</div>'+
+     '<div>'+
+       '<div class="sect"><h5>What it teaches</h5><div class="chips">'+
+       (teaches.length ? teaches.map(function(k){
+         return '<span class="chip">'+esc(k)+'</span>'; }).join('')
+        : '<span class="chip off">not tied to a skill</span>')+
+       '</div></div>'+
+       '<div class="sect"><h5>Where it applies</h5><div class="body">'+
+       (sent.length
+         ? 'The hours that worked those skills: '+sent.map(function(s){ return s.no; }).join(', ')+'.'
+         : 'No hour on record has worked those skills yet.')+
+       '</div></div>'+
+     '</div>'+
+     '<div>'+
+       '<div class="sect"><h5>Open it</h5>'+
+       '<div class="res"><span class="ic">'+(r.k==='video'?'▶':r.k==='audio'?'🎙':r.k==='link'?'🔗':'▤')+
+       '</span>'+esc(r.t)+'<span class="gr">'+esc(kind.toLowerCase())+'</span></div>'+
+       '<div class="body" style="color:var(--mid);margin-top:14px;font-size:13px">'+
+       'In the built app this is the thing itself, playing or opening in place. Here it is '+
+       'drawn, not wired.</div></div>'+
+     '</div>'+
+   '</div>'
+  });
+}
+
+/* the key sits at the bottom, in the centre, under everything */
+function paintMapCtl(){
+  var box=document.getElementById('mapctl');
+  box.innerHTML='';
+  document.getElementById('hint').style.display=(HERE&&MAP)?'none':'';
+  if(!HERE || !MAP) return;
+  box.appendChild(el('span','key',
+    '<i class="kt"></i>issues  <i class="ks"></i>skills  <i class="kr"></i>resources'+
+    info('The hours ring the outside and raise the issues. The issues are answered by skills. '+
+         'The skills are learned from what you send, which sits at the centre. Click any '+
+         'hexagon to keep only what it touches. Every link here is simulated: nothing in flow '+
+         'records which skill answers which issue.')));
+}
+
+/* ---- the workbook, her side: how far he has got ---- */
+function drawWorkbook(p,x,y,w){
+  var b=el('div','board'); b.dataset.region='workbook';
+  b.style.cssText='left:'+x+'px;top:'+y+'px;width:'+w+'px';
+  b.innerHTML='<h3>Workbook'+info('The same four chapters he sees. On his side they are '+
+    'sections to tick. On yours they are how far he has got, and where he has stopped.')+'</h3>';
+  p.workbook.forEach(function(w){
+    if(!match(w.n)) return;
+    var pct=Math.round(w.done/w.total*100);
+    var c=el('div','card'+(pct===100?' paid':pct===0?' owing':''),
+      '<div class="hd"><b>'+w.icon+'  '+esc(w.n)+'</b><span>'+w.done+' of '+w.total+'</span></div>'+
+      '<div class="bar"><i style="width:'+pct+'%"></i></div>'+
+      '<p>'+(pct===100?'finished':pct===0?'not started':pct+'% through')+'</p>');
+    b.appendChild(c);
+  });
+  return b;
+}
+
+/* ---- resources, her side: what she sent and what he added ---- */
+function drawLibrary(p,x,y,w){
+  var b=el('div','board'); b.dataset.region='library';
+  b.style.cssText='left:'+x+'px;top:'+y+'px;width:'+w+'px';
+  b.innerHTML='<h3>Links and videos'+info('What you sent him sits on the left of his Resources '+
+    'screen. What he added himself sits on the right. You see both here, he sees both there.')+'</h3>';
+  var ic={video:'▶',pdf:'▤',audio:'🎙',link:'🔗'};
+  ['you','them'].forEach(function(side){
+    var rows=p.library.filter(function(r){ return r.by===side && (match(r.t)||match(r.m)); });
+    if(!rows.length) return;
+    var h=el('div','axis', side==='you' ? 'FROM YOU' : 'ADDED BY '+p.name.toUpperCase());
+    h.style.cssText='position:static;margin:10px 0 2px'; b.appendChild(h);
+    rows.forEach(function(r){
+      b.appendChild(el('div','card',
+        '<div class="hd"><b>'+ic[r.k]+'  '+esc(r.t)+'</b></div><p>'+esc(r.m)+'</p>'));
+    });
+  });
+  return b;
+}
+
+/* ---- practices, her side: which of the ten he actually reaches for ---- */
+function drawPractices(p,x,y,w){
+  var b=el('div','board'); b.dataset.region='practices';
+  b.style.cssText='left:'+x+'px;top:'+y+'px;width:'+w+'px';
+  b.innerHTML='<h3>Practices'+info('The ten exercises on his Exercises screen. The number is '+
+    'how many times he has opened each one, so you can see what he reaches for and what he '+
+    'never touches.')+'</h3>';
+  p.practices.slice().sort(function(a,c){ return c.used-a.used; }).forEach(function(x){
+    if(!match(x.n) && !match(x.c)) return;
+    b.appendChild(el('div','card'+(x.used?' paid':' owing'),
+      '<div class="hd"><b>'+esc(x.n)+'</b><span>'+(x.used?x.used+'×':'never')+'</span></div>'+
+      '<p>'+esc(x.c)+' · about '+x.mins+' min</p>'));
+  });
+  return b;
+}
+
+function drawArc(p){
+  var wrap=el('div'), SW=132, SH=116, top=250;
+  wrap.dataset.region='patients';
+  var shown=p.sessions.filter(function(s){
+    return match('session '+s.no)||match(fmt(s.date))||s.skills.some(match)||match(s.summary);
+  });
+  var line=el('div','axline');
+  line.style.cssText='left:60px;top:'+(top+SH+34)+'px;width:'+(60+shown.length*(SW*0.78))+'px';
+  wrap.appendChild(line);
+  var a1=el('div','axis',fmt(p.sessions[0].date));
+  a1.style.cssText='left:60px;top:'+(top+SH+44)+'px'; wrap.appendChild(a1);
+  var a2=el('div','axis','next, '+fmt(p.next));
+  a2.style.cssText='left:'+(60+shown.length*(SW*0.78))+'px;top:'+(top+SH+44)+'px';
+  wrap.appendChild(a2);
+  var hdr=el('div','axis','Every hour, oldest on the left');
+  hdr.innerHTML+=info('Click an hour to open it. The card comes up underneath it and you '+
+    'can drag it anywhere. The amber one at the end has not happened yet.');
+  hdr.style.cssText='left:60px;top:'+(top-26)+'px'; wrap.appendChild(hdr);
+
+  shown.forEach(function(s,i){
+    var x=60+i*(SW*0.78), y=top+((i%2)?SH/2:0);
+    var h=el('div','shex');
+    h.style.cssText='left:'+x+'px;top:'+y+'px';
+    h.innerHTML='<span class="shell"></span><span class="face">'+
+      '<span class="no">'+s.no+'</span>'+
+      '<span class="dt">'+fmtShort(s.date)+'</span>'+
+      '<span class="marks">'+
+       '<i class="on" title="summary"></i>'+
+       '<i class="'+(s.hwDone?'on':'warn')+'" title="homework"></i>'+
+       '<i class="'+(s.notes.length>1?'on':'')+'" title="notes"></i>'+
+      '</span></span>';
+    h.onclick=function(ev){ ev.stopPropagation(); openSession(p,s,x,y+SH+22); };
+    wrap.appendChild(h);
+  });
+
+  var i2=shown.length, nx=el('div','shex next');
+  nx.style.cssText='left:'+(60+i2*(SW*0.78))+'px;top:'+(top+((i2%2)?SH/2:0))+'px';
+  nx.innerHTML='<span class="shell"></span><span class="face">'+
+    '<span class="no">'+(p.n+1)+'</span><span class="dt">'+fmtShort(p.next)+'</span>'+
+    '<span class="marks"><i></i><i></i><i></i></span></span>';
+  nx.onclick=function(ev){ ev.stopPropagation();
+    openNext(p, 60+i2*(SW*0.78), top+((i2%2)?SH/2:0)+SH+22); };
+  wrap.appendChild(nx);
+  wrap.style.cssText='position:absolute;left:60px;top:'+(top-40)+'px;width:'+
+    (40+(shown.length+1)*(SW*0.78)+SW)+'px;height:'+(SH*1.5+120)+'px';
+  /* the children were placed in layer coordinates, so pull them back inside */
+  [].forEach.call(wrap.children,function(n){
+    if(n.style.left) n.style.left=(parseFloat(n.style.left)-60)+'px';
+    if(n.style.top)  n.style.top =(parseFloat(n.style.top)-(top-40))+'px';
+  });
+  return wrap;
+}
+
+function drawMessages(p,x,y,w){
+  var b=el('div','board'); b.dataset.region='messages';
+  b.style.cssText='left:'+x+'px;top:'+y+'px;width:'+w+'px';
+  b.innerHTML='<h3>Messages'+info('Personal WhatsApp has no API, so this thread '+
+    'is mirrored in and read here. Replies still go from your phone. A live connection '+
+    'would need a business number.')+'</h3>';
+  p.threads.forEach(function(m){
+    var c=el('div','card'+(m.unread?' unread':''),
+      '<div class="hd"><b>'+esc(m.from)+'</b><span>'+fmtShort(m.when)+'</span></div>'+
+      '<p>'+esc(m.t)+'</p><span class="wa"><i></i>WhatsApp, mirrored into flow</span>');
+    b.appendChild(c);
+  });
+  return b;
+}
+
+function drawAdmin(p,x,y,w){
+  var b=el('div','board'); b.dataset.region='admin';
+  b.style.cssText='left:'+x+'px;top:'+y+'px;width:'+w+'px';
+  b.innerHTML='<h3>Account'+info(LIVE
+    ? 'Read live from the payment column on each session row.'
+    : 'This is the payment column on each session row. The endpoint already returns it '+
+      'and nothing has ever put it on screen. Simulated here until this page is served '+
+      'from the app itself.')+'</h3>';
+  p.invoices.forEach(function(v){
+    var c=el('div','card '+(v.state==='paid'?'paid':v.state==='unpaid'?'owing':''),
+      '<div class="hd"><b>Session '+v.no+'</b><span>'+fmtShort(v.date)+'</span></div>'+
+      '<p>R'+v.amount+'.00 · '+payWord(v.state)+'</p>');
+    b.appendChild(c);
+  });
+  return b;
+}
+
+/* ---------- what goes inside a card ---------- */
+function stamp(d){
+  return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+', '+
+         d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+}
+function openSession(p,s){
+  openCard({
+   /* which session and when, once, in the bar above. Not repeated in the body. */
+   title:p.name+' · session '+s.no+' of '+p.n+' · '+fmt(s.date),
+   html:
+   '<div class="crow crow3">'+
+
+     '<div>'+
+       '<div class="sect"><h5>Summary</h5>'+
+       '<div class="verbatim"><div class="body">'+esc(s.summary)+'</div>'+
+       '<div class="by">your words, verbatim. nothing here can be overwritten.</div></div></div>'+
+     '</div>'+
+
+     '<div>'+
+       '<div class="sect"><h5>Homework</h5>'+
+       '<div class="body">'+esc(s.homework)+'</div></div>'+
+       '<div class="sect"><h5>Resources</h5>'+
+       s.resources.map(function(r){
+         return '<div class="res"><span class="ic">'+(r.k==='video'?'▶':'▤')+'</span>'+
+                esc(r.t)+'<span class="gr">'+esc(r.g)+'</span></div>'; }).join('')+
+       '</div>'+
+     '</div>'+
+
+     '<div>'+
+       '<div class="sect"><h5>Notes</h5>'+
+       s.notes.map(function(n,i){
+         return '<div class="note"><div class="by">'+esc(n.by)+' · '+
+                stamp(s.noteTimes[i%s.noteTimes.length])+'</div>'+esc(n.t)+'</div>'; }).join('')+
+       '<textarea placeholder="Add a note"></textarea>'+
+       '<button class="btn">Save note</button></div>'+
+     '</div>'+
+
+   '</div>',
+
+   foot:
+   '<div class="crow crow2">'+
+     '<div>'+
+       '<div class="sect"><h5>Topics'+info('Single word labels lifted off the summary. '+
+         'A dot means it is the first time this one has come up with this patient.')+'</h5>'+
+       '<div class="chips">'+
+       s.topics.map(function(t){
+         return '<span class="chip'+(s.topicsNew[t]?' first':'')+'">'+esc(t)+
+                (s.topicsNew[t]?'<i>•</i>':'')+'</span>'; }).join('')+
+       '</div></div>'+
+     '</div>'+
+     '<div>'+
+       '<div class="sect"><h5>Skills</h5><div class="chips">'+
+       SKILLS.slice(0,9).map(function(k){
+         return '<span class="chip'+(s.skills.indexOf(k)>=0?'':' off')+'">'+esc(k)+'</span>'; }).join('')+
+       '</div></div>'+
+     '</div>'+
+   '</div>'
+  });
+}
+
+function openNext(p,cx,cy){
+  openCard({
+   title:p.name+' · not yet happened',
+   x:cx, y:cy,
+   html:
+   '<h1>Session '+(p.n+1)+'</h1>'+
+   '<div class="when">'+fmt(p.next)+'</div>'+
+   '<div class="sect"><h5>Prep '+info('Only you see prep. It is yours before the hour, and it never reaches the patient’s side.')+'</h5>'+
+   '<textarea placeholder="What you want to pick up on"></textarea>'+
+   '<button class="btn">Save prep</button></div>'+
+   '<div class="sect"><h5>Carried over</h5><div class="body">'+
+   esc(p.sessions[p.sessions.length-1].homework)+'</div></div>'
+  });
+}
+
+/* ---------- the card ----------
+   Whatever the canvas is doing behind it, the card fills the window with a
+   margin all round and the canvas goes frosted underneath. */
+var scrim=document.getElementById('scrim');
+scrim.addEventListener('click',function(){ closeCards(); });
+function closeCards(){ cardsEl.innerHTML=''; scrim.classList.remove('on'); return true; }
+function anyCard(){ return !!cardsEl.firstChild; }
+function zoomTo(wx,wy,z){
+  var r=stage.getBoundingClientRect();
+  V.z=z; V.x=r.width/2-wx*z; V.y=r.height/2-wy*z; T();
+}
+function openCard(o){
+  closeCards();
+  var c=el('div','wcard');
+  c.innerHTML='<div class="wch">'+
+    '<span class="ttl">'+esc(o.title)+'</span>'+
+    '<button class="x" title="close">close</button></div>'+
+    '<div class="wcb">'+o.html+'</div>'+
+    (o.foot ? '<div class="wcf">'+o.foot+'</div>' : '');
+  cardsEl.appendChild(c);
+  scrim.classList.add('on');
+  c.querySelector('.x').onclick=function(e){ e.stopPropagation(); closeCards(); };
+  return c;
+}
+
+
+/* ---------- navigation ---------- */
+function go(p){
+  HERE=p; LENS='patients'; MAP=false; closeCards();
+  V.z=1.35; T();
+  setTimeout(function(){ render(true); },120);
+}
+function out(){
+  if(anyCard()){ closeCards(); return; }
+  if(MAP){ MAP=false; LENS=null; render(true); return; }
+  if(HERE){ HERE=null; LENS='patients'; render(true); return; }
+  LENS=null; fit(); paintPills();   /* already out: Escape frames everything */
+}
+
+/* The trail in the top bar, alongside the control in the rail. Either gets her back. */
+function paintCrumb(){
+  var crumb=document.getElementById('crumb');
+  crumb.innerHTML='';
+  var a=el('span','c'+(HERE?'':' here'),'The practice');
+  if(HERE) a.onclick=function(){ HERE=null; LENS='patients'; closeCards(); render(true); };
+  crumb.appendChild(a);
+  if(HERE){
+    crumb.appendChild(el('span','sep','›'));
+    crumb.appendChild(el('span','c here',esc(HERE.name)));
+  }
+}
+
+/* ---------- the pills across the top of the canvas ----------
+   Same job as the rail, said in the canvas's own language: a place to fly to,
+   not a screen to swap. Whatever regions are on this plane get a pill. */
+var REGION_LABEL={patients:'Sessions',resources:'Resources',library:'Links and videos',
+                  workbook:'Workbook',practices:'Practices',messages:'Messages',
+                  admin:'Account'};
+function paintPills(){
+  var box=document.getElementById('pills');
+  box.innerHTML='';
+  /* The view switch sits on the left and never moves. A pipe separates it from
+     whatever that view puts beside it. */
+  if(HERE){
+    var bb=el('button',MAP?'':'on','Boards');
+    bb.title='everything she has, laid out';
+    bb.onclick=function(){ if(!MAP){ fit(); return; } MAP=false; LENS=null; SEL=null; render(true); };
+    box.appendChild(bb);
+    var mb=el('button',MAP?'on':'','Map');
+    mb.title='the same person drawn as links';
+    mb.onclick=function(){ if(MAP){ fit(); return; } MAP=true; LENS=null; SEL=null; render(true); };
+    box.appendChild(mb);
+    box.appendChild(el('span','pipe'));
+    if(MAP){
+      MAPMODES.forEach(function(m){
+        var b=el('button',MAPMODE===m[0]?'on':'',esc(m[1]));
+        b.onclick=function(){ MAPMODE=m[0]; SEL=null; render(true); };
+        box.appendChild(b);
+      });
+      return;
+    }
+  } else {
+    var all=el('button',LENS?'':'on','The practice');
+    all.onclick=function(){ LENS=null; fit(); paintPills(); };
+    box.appendChild(all);
+    box.appendChild(el('span','pipe'));
+  }
+  [].forEach.call(world.querySelectorAll('[data-region]'),function(r){
+    var k=r.dataset.region;
+    var label=(!HERE && k==='patients') ? 'Patients' : (REGION_LABEL[k]||k);
+    var b=el('button',LENS===k?'on':'',esc(label)+countFor(k));
+    b.onclick=function(){ LENS=k; flyTo(k); paintPills(); };
+    box.appendChild(b);
+  });
+}
+/* The numbers that used to sit in the side panel now ride on the pills. */
+function countFor(k){
+  var n='';
+  if(HERE){
+    if(k==='patients') n=HERE.n;
+    if(k==='workbook'){
+      var d=HERE.workbook.reduce(function(a,w){ return a+w.done; },0);
+      var t=HERE.workbook.reduce(function(a,w){ return a+w.total; },0);
+      n=d+'/'+t;
+    }
+    if(k==='library')   n=HERE.library.length;
+    if(k==='practices') n=HERE.practices.filter(function(x){ return x.used>0; }).length;
+    if(k==='messages')  n=HERE.unread||'';
+    if(k==='admin')     n=HERE.owing?HERE.owing+' due':'';
+  } else {
+    if(k==='patients') n=PATIENTS.length;
+    if(k==='messages') n=PATIENTS.reduce(function(a,p){ return a+p.unread; },0)||'';
+    if(k==='admin'){
+      var due=PATIENTS.reduce(function(a,p){ return a+p.owing; },0);
+      n=due?due+' due':'';
+    }
+  }
+  return n==='' ? '' : '<span class="n">'+n+'</span>';
+}
+
+function render(refit){
+  paintCrumb();
+  [].forEach.call(world.querySelectorAll('.layer'),function(n){ n.remove(); });
+  world.appendChild(HERE ? drawPatient(HERE) : drawCaseload());
+  paintPills(); paintMapCtl();
+  if(refit) fit();
+}
+
+
+/* ---------- you can never end up nowhere ----------
+   If a move leaves nothing on the canvas in view, the camera comes straight
+   back to the whole thing. Escape does it on purpose. */
+function anythingInView(){
+  var st=stage.getBoundingClientRect();
+  var nodes=world.querySelectorAll('.layer > *');
+  for(var i=0;i<nodes.length;i++){
+    var r=nodes[i].getBoundingClientRect();
+    if(!r.width && !r.height) continue;
+    if(r.right>st.left+20 && r.left<st.right-20 &&
+       r.bottom>st.top+20 && r.top<st.bottom-20) return true;
+  }
+  return !nodes.length;
+}
+var guardT=null;
+function keepOnScreen(){
+  clearTimeout(guardT);
+  guardT=setTimeout(function(){ if(!anythingInView()) fit(); },500);
+}
+
+/* The big picture: everything on the plane, framed. */
+function fit(){
+  var nodes=world.querySelectorAll('.layer > *');
+  if(!nodes.length) return;
+  var x1=1e9,y1=1e9,x2=-1e9,y2=-1e9;
+  [].forEach.call(nodes,function(n){
+    var w=n.offsetWidth, h=n.offsetHeight;
+    if(!w && !h) return;
+    x1=Math.min(x1,n.offsetLeft); y1=Math.min(y1,n.offsetTop);
+    x2=Math.max(x2,n.offsetLeft+w); y2=Math.max(y2,n.offsetTop+h);
+  });
+  if(x1>x2) return;
+  var s=stage.getBoundingClientRect(), pad=56;
+  var z=Math.min((s.width-pad*2)/(x2-x1),(s.height-pad*2)/(y2-y1),1.1);
+  world.classList.add('gliding');
+  V.z=Math.max(.1,z);
+  V.x=s.width/2-((x1+x2)/2)*V.z;
+  V.y=s.height/2-((y1+y2)/2)*V.z;
+  T();
+  setTimeout(function(){ world.classList.remove('gliding'); },420);
+}
+
+/* ---------- pan and zoom, by finger or by mouse ----------
+   Pointer events so a trackpad, a mouse and an iPad all drive the same code.
+   One finger moves the canvas. Two fingers pinch to zoom and move together. */
+var pan=false,px,py;
+var PTR={}, PN=0, pinch=null;
+function ptrList(){ var a=[]; for(var k in PTR) a.push(PTR[k]); return a; }
+function dist(a,b){ return Math.hypot(a.x-b.x, a.y-b.y); }
+function mid(a,b){ return {x:(a.x+b.x)/2, y:(a.y+b.y)/2}; }
+
+stage.addEventListener('pointerdown',function(e){
+  if(e.target.closest('.hex,.shex,.card,.wcard,.mnode')) return;
+  PTR[e.pointerId]={x:e.clientX,y:e.clientY}; PN++;
+  try{ stage.setPointerCapture(e.pointerId); }catch(err){}
+  if(PN===1){ pan=true; px=e.clientX; py=e.clientY; stage.classList.add('grabbing'); }
+  if(PN===2){
+    pan=false;
+    var p=ptrList();
+    pinch={d:dist(p[0],p[1]), m:mid(p[0],p[1]), z:V.z};
+  }
+});
+stage.addEventListener('pointermove',function(e){
+  if(!PTR[e.pointerId]) return;
+  PTR[e.pointerId]={x:e.clientX,y:e.clientY};
+  var p=ptrList();
+  if(p.length>=2 && pinch){
+    e.preventDefault();
+    var d=dist(p[0],p[1]), m=mid(p[0],p[1]);
+    var r=stage.getBoundingClientRect();
+    var nz=Math.min(2.4,Math.max(.1, pinch.z * (d/(pinch.d||1))));
+    var k=nz/V.z, mx=m.x-r.left, my=m.y-r.top;
+    V.x=mx-(mx-V.x)*k; V.y=my-(my-V.y)*k; V.z=nz;
+    V.x+=m.x-pinch.m.x; V.y+=m.y-pinch.m.y;
+    pinch.m=m; T();
+    return;
+  }
+  if(!pan) return;
+  e.preventDefault();
+  V.x+=e.clientX-px; V.y+=e.clientY-py; px=e.clientX; py=e.clientY; T();
+});
+function ptrEnd(e){
+  if(!PTR[e.pointerId]) return;
+  delete PTR[e.pointerId]; PN=Math.max(0,PN-1);
+  if(PN<2) pinch=null;
+  if(PN===0){
+    if(pan) keepOnScreen();
+    pan=false; stage.classList.remove('grabbing');
+  } else {
+    var p=ptrList();
+    if(p.length===1){ pan=true; px=p[0].x; py=p[0].y; }
+  }
+}
+stage.addEventListener('pointerup',ptrEnd);
+stage.addEventListener('pointercancel',ptrEnd);
+stage.addEventListener('pointerleave',function(e){ if(e.pointerType==='mouse') ptrEnd(e); });
+stage.addEventListener('wheel',function(e){
+  /* A card with more in it than fits scrolls itself. Swallowing every wheel
+     event here is what stopped the card scrolling and stopped the pan. */
+  var body=e.target.closest('.wcb');
+  if(body && body.scrollHeight>body.clientHeight+1){
+    var atTop=body.scrollTop<=0, atEnd=body.scrollTop+body.clientHeight>=body.scrollHeight-1;
+    if(!(atTop && e.deltaY<0) && !(atEnd && e.deltaY>0)) return;
+  }
+  e.preventDefault();
+  var r=stage.getBoundingClientRect(), mx=e.clientX-r.left, my=e.clientY-r.top;
+  if(!e.ctrlKey && !e.metaKey){ V.x-=e.deltaX; V.y-=e.deltaY; T(); keepOnScreen(); return; }
+  var k=Math.exp(-e.deltaY*0.0018), nz=Math.min(2.4,Math.max(.25,V.z*k)); k=nz/V.z;
+  V.x=mx-(mx-V.x)*k; V.y=my-(my-V.y)*k; V.z=nz; T(); keepOnScreen();
+},{passive:false});
+function zoomBy(k){
+  var r=stage.getBoundingClientRect(), mx=r.width/2, my=r.height/2;
+  var nz=Math.min(2.4,Math.max(.25,V.z*k)); k=nz/V.z;
+  V.x=mx-(mx-V.x)*k; V.y=my-(my-V.y)*k; V.z=nz; T();
+}
+document.getElementById('zi').onclick=function(){ zoomBy(1.22); };
+document.getElementById('zo').onclick=function(){ zoomBy(1/1.22); };
+document.getElementById('zf').onclick=function(){ fit(); };
+document.addEventListener('keydown',function(e){ if(e.key==='Escape') out(); });
+stage.addEventListener('click',function(e){
+  if(e.target!==stage && e.target!==world) return;
+  if(MAP && SEL){ var w=world.querySelector('[data-region="map"]'); if(w&&w.__clear) w.__clear(); return; }
+  out();
+});
+
+/* ---------- the pills fly the camera, they do not swap the screen ----------
+   Everything is already on the canvas. Zoom out with fit and the whole person
+   is there at once. */
+function flyTo(name){
+  var r=world.querySelector('[data-region="'+name+'"]');
+  if(!r) return;
+  var x=r.offsetLeft, y=r.offsetTop, w=r.offsetWidth, h=r.offsetHeight;
+  if(!w || !h) return;
+  var s=stage.getBoundingClientRect(), pad=54;
+  var z=Math.min((s.width-pad*2)/w,(s.height-pad*2)/h,1.05);
+  z=Math.max(0.2,z);
+  world.classList.add('gliding');
+  V.z=z; V.x=s.width/2-(x+w/2)*z; V.y=s.height/2-(y+h/2)*z; T();
+  setTimeout(function(){ world.classList.remove('gliding'); },420);
+  keepOnScreen();
+}
+
+/* ---------- the practice itself, behind Practice details on her name ---------- */
+function openPractice(){
+  var sessions=PATIENTS.reduce(function(a,p){ return a+p.n; },0);
+  var unread=PATIENTS.reduce(function(a,p){ return a+p.unread; },0);
+  var owing=PATIENTS.reduce(function(a,p){ return a+p.owing; },0);
+  var r=stage.getBoundingClientRect();
+  openCard({
+   title:'the account behind everything',
+   x:(r.width/2-V.x)/V.z-260, y:(140-V.y)/V.z,
+   html:
+   '<h1>The practice</h1>'+
+   '<div class="when">Wendy Rossouw, clinical psychologist</div>'+
+
+   '<div class="sect"><h5>Where it stands today</h5><div class="body">'+
+   PATIENTS.length+' patients on the books, '+sessions+' hours held between them. '+
+   (unread?unread+' messages waiting. ':'No messages waiting. ')+
+   (owing?owing+' sessions unpaid.':'Nothing outstanding.')+
+   '</div></div>'+
+
+   '<div class="sect"><h5>Who is signed in</h5><div class="body">'+
+   'Wendy Rossouw. This account sees every patient on this page. A patient signing in '+
+   'sees only their own record, and never another patient.</div></div>'+
+
+   '<div class="sect"><h5>What she can never see</h5><div class="body">'+
+   'The AI conversation on a patient’s side is private to that patient, always. '+
+   'It is kept out on the server, not by hiding it here.</div></div>'+
+
+   '<div class="sect"><h5>Where the data lives</h5><div class="body">'+
+   'Each patient’s own workspace. flow is the window onto it. Nothing here is a copy '+
+   'that can drift.</div></div>'+
+
+   '<div class="sect"><h5>Practice details</h5>'+
+   '<div class="res"><span class="ic">▤</span>Rate per session<span class="gr">R950.00</span></div>'+
+   '<div class="res"><span class="ic">▤</span>Sessions this month<span class="gr">18</span></div>'+
+   '<div class="res"><span class="ic">▶</span>Resources sent<span class="gr">41</span></div>'+
+   '</div>'
+  });
+}
+
+
+qEl.addEventListener('input',function(){ Q=qEl.value.trim().toLowerCase(); render(); });
+
+
+/* ---------- the one wire that is real ----------
+   The admin column is the payment field, nothing else. When this page is served
+   from the app itself, with her signed in, it takes the real value. Anywhere else
+   it keeps the simulated one and says so. Summaries and messages are left alone
+   on purpose, so the design still reads when there is no API to talk to. */
+function goLive(){
+  return fetch('/api/sessions',{credentials:'same-origin'})
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(d){
+      if(!d || !d.sessions || !d.sessions.length) return false;
+      var me=PATIENTS[0], rows=d.sessions;
+      me.sessions.forEach(function(s,i){ if(rows[i]) s.payment=rows[i].payment; });
+      rebuildAccount(me);
+      LIVE=true;
+      return true;
+    })
+    .catch(function(){ return false; });
+}
+function markSource(){
+  var b=document.querySelector('.sim');
+  if(!b) return;
+  b.textContent = LIVE ? 'payments live · everything else simulated' : 'simulated data';
+  b.title = LIVE
+    ? 'The payment column is read from the live session rows. Nothing else is.'
+    : 'No API on this origin, so every number here is invented.';
+}
+
+/* ---------- the menu on her name ----------
+   No chevron. Clicking the name opens it, and it hangs straight off the bottom
+   left of the name so it lands in the same place every time. Four things, and
+   every one of them does something. */
+var whoEl=document.getElementById('who'), whoMenu=document.getElementById('whoMenu');
+function buildWhoMenu(){
+  whoMenu.innerHTML='';
+  function add(label,count,fn){
+    var b=el('button','',esc(label)+(count?'<span class="n">'+count+'</span>':''));
+    b.onclick=function(e){ e.stopPropagation(); closeWhoMenu(); fn(); };
+    whoMenu.appendChild(b);
+  }
+  var unread=PATIENTS.reduce(function(a,p){ return a+p.unread; },0);
+  var owing=PATIENTS.reduce(function(a,p){ return a+p.owing; },0);
+  whoMenu.appendChild(el('h6','','Go to'));
+  add('All patients',PATIENTS.length,function(){
+    HERE=null; LENS='patients'; closeCards(); render(true); });
+  add('All messages',unread||'',function(){
+    HERE=null; LENS='messages'; closeCards(); render(); flyTo('messages'); });
+  add('All accounts',owing?owing+' due':'',function(){
+    HERE=null; LENS='admin'; closeCards(); render(); flyTo('admin'); });
+  whoMenu.appendChild(document.createElement('hr'));
+  add('Practice details','',function(){ HERE=null; render(true); openPractice(); });
+}
+function placeWhoMenu(){
+  var r=whoEl.getBoundingClientRect();
+  whoMenu.style.left=Math.round(r.left)+'px';
+  whoMenu.style.top=Math.round(r.bottom+8)+'px';
+}
+function closeWhoMenu(){ whoMenu.classList.remove('open'); whoEl.classList.remove('open'); }
+whoEl.addEventListener('click',function(e){
+  e.stopPropagation();
+  if(whoMenu.classList.contains('open')){ closeWhoMenu(); return; }
+  buildWhoMenu(); placeWhoMenu();
+  whoMenu.classList.add('open'); whoEl.classList.add('open');
+});
+whoMenu.addEventListener('click',function(e){ e.stopPropagation(); });
+document.addEventListener('click',closeWhoMenu);
+window.addEventListener('resize',function(){ if(whoMenu.classList.contains('open')) placeWhoMenu(); });
+
+/* say it the way she will actually do it */
+if(window.matchMedia && window.matchMedia('(hover:none)').matches){
+  document.getElementById('hint').textContent=
+    'Drag to move. Pinch to zoom. Tap a patient to go in.';
+}
+
+render(true);
+markSource();
+goLive().then(function(ok){ if(ok){ render(); markSource(); } });
+window.addEventListener('resize',function(){ fit(); });
+})();
+</script>
+</body>
+</html>
