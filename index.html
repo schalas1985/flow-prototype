@@ -1223,7 +1223,12 @@ function openCard(o){
 function go(p){
   HERE=p; LENS='patients'; MAP=false; closeCards();
   V.z=1.35; T();
-  setTimeout(function(){ render(true); },120);
+  setTimeout(function(){
+    render(true);
+    /* On a tablet the whole plane at once is too small to read, so land on the
+       hours and let her move out from there. Boards still frames everything. */
+    if(window.innerWidth<1200){ LENS='patients'; flyTo('patients'); paintPills(); }
+  },120);
 }
 function out(){
   if(anyCard()){ closeCards(); return; }
